@@ -1,5 +1,10 @@
 /*
- * Copyright 2016 Scott Bender <scott@scottbender.net>
+ * This work is based on a template plugin created by Scott Bender <scott@scottbender.net>
+ *
+ * Scott's guidance and assistance were critical in the development of this project.
+ *
+ * Modification and transformation of the template to the AnyWater Alarm plugin was
+ * done by Jeffrey Siegel, MV RED HEAD <jeff@mvredhead.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,9 +87,9 @@ module.exports = function(app) {
             sentUnavailableAlarm = false
             app.handleMessage(plugin.id,
                               getAlarmDelta(app,
-                                            'notifications.redhead.daqUnavailable',
+                                            'notifications.redheadlabs.awUnavailable',
                                             'normal',
-                                            'The DAQ module is now available'))
+                                            'The AnyWater module is now available'))
           }
 
           // Change the following code to process the XML
@@ -166,18 +171,18 @@ module.exports = function(app) {
         } else {
           app.handleMessage(plugin.id,
                             getAlarmDelta(app,
-                                          'notifications.redhead.daqUnavailable',
+                                          'notifications.redheadlabs.awUnavailable',
                                           'alert',
-                                          'The DAQ module is unavailable'))
+                                          'The AnyWater module is unavailable'))
           sentUnavailableAlarm = true
           printRequestError(error, response)
         }
       })
   }
 
-  plugin.id = "signalk-redhead-daq"
-  plugin.name = "Redhead DAQ"
-  plugin.description = "Signal K Node Server Plugin For Redhead"
+  plugin.id = "signalk-redheadlabs-anywater"
+  plugin.name = "AnyWater Alarm"
+  plugin.description = "Signal K Node Server Plugin For AnyWater Alarms"
 
   plugin.schema = {
     title: plugin.name,
