@@ -18,17 +18,9 @@
  * limitations under the License.
  */
 
-const fs = require('fs')
-const _ = require('lodash')
+//const fs = require('fs')
+//const _ = require('lodash')
 const request = require("request")
-const camelCase = require('camelcase')
-
-const base = 'electrical.switches.hue'
-const colorModeMap = {
-  hs: 'hsb',
-  ct: 'temperature',
-  xy: 'cie'
-}
 
 module.exports = function(app) {
   var plugin = {}
@@ -67,32 +59,31 @@ module.exports = function(app) {
     //app.error("response.statusText: " + response.statusText)
   }
 
-  function startLoading(props, ip) {
-    load(props, ip)
+  function startLoading(props, addr) {
+    load(props, addr)
     let timer = setInterval(() => {
-      loadInfo(props, ip)
+      loadInfo(props, addr)
     }, (props.refreshRate || 5)  * 1000)
     onStop.push(() => clearInterval(timer))
   }
 
-  function loadInfo(props, ip) {
+  function loadInfo(props, addr) {
     request({
-        url: `http://${ip}/state.xml`,
+        url: `${addr}`,
         method: 'GET',
       }, (error, response, body) => {
         if (!error && response.statusCode === 200) {
-          setProviderStatus(`Connected to ${ip}`)
+          setProviderStatus(`Connected to ${addr}`)
 
-          if ( sentUnavailableAlarm ) {
+          if (sentUnavailableAlarm) {
             sentUnavailableAlarm = false
             app.handleMessage(plugin.id,
                               getAlarmDelta(app,
                                             'notifications.redheadlabs.awUnavailable',
                                             'normal',
-                                            'The AnyWater module is now available'))
+                                            'The AnyWater alarm system is now available'))
           }
 
-          // Change the following code to process the XML
           _.keys(body).forEach(key => {
             let light = body[key]
             let displayName = light.name
@@ -173,7 +164,7 @@ module.exports = function(app) {
                             getAlarmDelta(app,
                                           'notifications.redheadlabs.awUnavailable',
                                           'alert',
-                                          'The AnyWater module is unavailable'))
+                                          'The AnyWater alarm system is unavailable'))
           sentUnavailableAlarm = true
           printRequestError(error, response)
         }
@@ -182,7 +173,7 @@ module.exports = function(app) {
 
   plugin.id = "signalk-redheadlabs-anywater"
   plugin.name = "AnyWater Alarm"
-  plugin.description = "Signal K Node Server Plugin For AnyWater Alarms"
+  plugin.description = "Signal K Node Server Plugin for the AnyWater alarm system"
 
   plugin.schema = {
     title: plugin.name,
@@ -190,12 +181,12 @@ module.exports = function(app) {
     properties: {
       address: {
         type: 'string',
-        title: 'IP Address',
+        title: 'DAQ access URL',
       },
       refreshRate: {
         type: 'number',
         title: 'Refresh Rate',
-        description: 'The rate in witch the daq will be queried for updates, in seconds',
+        description: 'The query rate in seconds',
         default: 5
       }
     }
