@@ -84,80 +84,47 @@ module.exports = function(app) {
                                             'The AnyWater alarm system is now available'))
           }
 
-          _.keys(body).forEach(key => {
-            let light = body[key]
-            let displayName = light.name
-            let path = `${base}.${hueType}.${camelCase(displayName)}`
-            let state
-            let on
-            
-            if ( hueType === 'groups' ) {
-              state = light.action
-              on = light.state.any_on
-            } else {
-              state = light.state
-              on = light.state.on
-            }
+          var values = [
+            {
+              path: 'anyWater.channel0',
+              value: 0
+            },
+            {
+              path: 'anyWater.channel1',
+              value: 0
+            },
+            {
+              path: 'anyWater.channel2',
+              value: 0
+            },
+            {
+              path: 'anyWater.channel3',
+              value: 0
+            },
+            {
+              path: 'anyWater.channel4',
+              value: 0
+            },
+            {
+              path: 'anyWater.channel5',
+              value: 0
+            },
+            {
+              path: 'anyWater.channel6',
+              value: 0
+            },
+            {
+              path: 'anyWater.channel7',
+              value: 0
+            },
+          ]
 
-            var values = [
+          app.handleMessage(plugin.id, {
+            updates: [
               {
-                path: `${path}.state`,
-                value: on
-              },
-              {
-                path: `${path}.dimmingLevel`,
-                value: state.bri / 255.0
-              },
-              {
-                path: `${path}.meta`,
-                value: {
-                  type: 'dimmer',
-                  displayName: displayName,
-                  hueModel: light.modelid,
-                  canDimWhenOff: false
-                }
+                values: values
               }
             ]
-
-            if ( state.colormode ) {
-              values.push({
-                path: `${path}.colorMode`,
-                value: colorModeMap[state.colormode]
-              })
-
-              if ( state.hue && state.sat ) {
-                values.push({
-                  path: `${path}.hue`,
-                  value: state.hue / 182.04 / 360.0
-                })
-                values.push({
-                  path: `${path}.saturation`,
-                  value: state.sat / 255.0
-                })
-              }
-
-              if ( state.ct ) {
-                values.push({
-                  path: `${path}.temperature`,
-                  value: 1000000.0/state.ct
-                })
-              }
-
-              if ( state.xy ) {
-                values.push({
-                  path: `${path}.cie`,
-                  value: { x: state.xy[0], y: state.xy[1] }
-                })
-              }
-            }
-
-            app.handleMessage(plugin.id, {
-              updates: [
-                {
-                  values: values
-                }
-              ]
-            })
           })
         } else {
           app.handleMessage(plugin.id,
