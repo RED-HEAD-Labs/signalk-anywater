@@ -55,12 +55,14 @@ module.exports = function(app) {
   function printRequestError(error, response) {
     setProviderError(error.message)
     app.error("error: " + error.message)
+    app.error(error.stack)
+    app.error(new Error().stack)
     //app.error("response.statusCode: " + response.statusCode)
     //app.error("response.statusText: " + response.statusText)
   }
 
   function startLoading(props, addr) {
-    load(props, addr)
+    loadInfo(props, addr);
     let timer = setInterval(() => {
       loadInfo(props, addr)
     }, (props.refreshRate || 5)  * 1000)
@@ -68,74 +70,154 @@ module.exports = function(app) {
   }
 
   function loadInfo(props, addr) {
-    request({
-        url: `${addr}`,
-        method: 'GET',
-      }, (error, response, body) => {
-        if (!error && response.statusCode === 200) {
-          setProviderStatus(`Connected to ${addr}`)
+    request(
+	{
+        	url: `${addr}`,
+        	method: 'GET'
+      	}, 
+	(error, response, body) => {
+        	if (!error && response.statusCode === 200) {
+          		setProviderStatus(`Connected to ${addr}`);
 
-          if (sentUnavailableAlarm) {
-            sentUnavailableAlarm = false
-            app.handleMessage(plugin.id,
-                              getAlarmDelta(app,
-                                            'notifications.redheadlabs.awUnavailable',
-                                            'normal',
-                                            'The AnyWater alarm system is now available'))
-          }
+          		if (sentUnavailableAlarm) {
+            			sentUnavailableAlarm = false;
+            			app.handleMessage(
+					plugin.id,
+                              		getAlarmDelta(
+						app,
+                                            	'notifications.redheadlabs.awUnavailable',
+                                            	'normal',
+                                            	'The AnyWater alarm system is now available'
+					)
+				);
+          		}
 
-          var values = [
-            {
-              path: 'anyWater.channel0',
-              value: 0
-            },
-            {
-              path: 'anyWater.channel1',
-              value: 0
-            },
-            {
-              path: 'anyWater.channel2',
-              value: 0
-            },
-            {
-              path: 'anyWater.channel3',
-              value: 0
-            },
-            {
-              path: 'anyWater.channel4',
-              value: 0
-            },
-            {
-              path: 'anyWater.channel5',
-              value: 0
-            },
-            {
-              path: 'anyWater.channel6',
-              value: 0
-            },
-            {
-              path: 'anyWater.channel7',
-              value: 0
-            },
-          ]
+			var s0v = findValue(body, "input0state");
+			var s1v = findValue(body, "input1state");
+			var s2v = findValue(body, "input2state");
+			var s3v = findValue(body, "input3state");
+                        var s4v = findValue(body, "input4state");
+                        var s5v = findValue(body, "input5state");
+                        var s6v = findValue(body, "input6state");
+                        var s7v = findValue(body, "input7state");
 
-          app.handleMessage(plugin.id, {
-            updates: [
-              {
-                values: values
-              }
-            ]
-          })
-        } else {
-          app.handleMessage(plugin.id,
-                            getAlarmDelta(app,
-                                          'notifications.redheadlabs.awUnavailable',
-                                          'alert',
-                                          'The AnyWater alarm system is unavailable'))
-          sentUnavailableAlarm = true
-          printRequestError(error, response)
-        }
-      })
+                        var s0state = detectState(0, s0v);
+                        var s1state = detectState(1, s1v);
+                        var s2state = detectState(2, s2v);
+                        var s3state = detectState(3, s3v);
+                        var s4state = detectState(4, s4v);
+                        var s5state = detectState(5, s5v);
+                        var s6state = detectState(6, s6v);
+                        var s7state = detectState(7, s7v);
+
+			if ((s0state == "ALARM")
+					|| (s1state == "ALARM")
+					|| (s2state == "ALARM")
+					|| (s3state == "ALARM")
+					|| (s4state == "ALARM")
+					|| (s5state == "ALARM")
+					|| (s6state == "ALARM")
+					|| (s7state == "ALARM"))
+				alarmState = "ALARM";
+			else
+				alarmState = "---";
+
+			var values = [
+            		{
+              			path: 'anyWater.channel0v',
+              			value: s0v
+            		},
+            		{
+              			path: 'anyWater.channel1v',
+              			value: s1v
+            		},
+            		{
+              			path: 'anyWater.channel2v',
+              			value: s2v
+            		},
+            		{
+              			path: 'anyWater.channel3v',
+              			value: s3v
+            		},
+            		{
+              			path: 'anyWater.channel4v',
+              			value: s4v
+            		},
+            		{
+              			path: 'anyWater.channel5v',
+              			value: s5v
+            		},
+            		{
+              			path: 'anyWater.channel6v',
+              			value: s6v
+            		},
+            		{
+              			path: 'anyWater.channel7v',
+              			value: s7v
+            		},
+                        {
+                                path: 'anyWater.channel0State',
+                                value: s0state
+                        },                                  
+                        {
+                                path: 'anyWater.channel1State',
+                                value: s1state
+                        },
+                        {
+                                path: 'anyWater.channel2State',
+                                value: s2state
+                        },
+                        {
+                                path: 'anyWater.channel3State',
+                                value: s3state
+                        },
+                        {
+                                path: 'anyWater.channel4State',
+                                value: s4state
+                        },
+                        {
+                                path: 'anyWater.channel5State',
+                                value: s5state
+                        },
+                        {
+                                path: 'anyWater.channel6State',
+                                value: s6state
+                        },
+                        {
+                                path: 'anyWater.channel7State',
+                                value: s7state
+                        },
+                        {
+                                path: 'anyWater.alarmState',
+                                value: alarmState
+                        }
+          		];
+
+          		app.handleMessage(
+				plugin.id, 
+				{
+            				updates: [
+              				{
+                				values: values
+              				}
+            				]
+          			}
+			);
+        	} 
+		else {
+          		app.handleMessage(
+				plugin.id,
+				getAlarmDelta(
+					app,
+					'notifications.redheadlabs.awUnavailable',
+					'alert',
+					'The AnyWater alarm system is unavailable'
+				)
+			);
+          		sentUnavailableAlarm = true;
+          		printRequestError(error, response);
+        	}
+	});
   }
 
   plugin.id = "signalk-redheadlabs-anywater"
@@ -181,4 +263,27 @@ function getAlarmDelta(app, path, state, message)
       ]
   }
   return delta;
+}
+
+function findValue(xmlDoc, tag)
+{
+	var opentag = "<" + tag + ">";
+	var closetag = "</"+ tag + ">";
+             
+	index = xmlDoc.indexOf(opentag);
+	startindex = index + opentag.length;
+	endindex = xmlDoc.indexOf(closetag);
+	v = xmlDoc.slice(startindex, endindex);
+	if (v < 0)
+		v = -v;
+             
+	return v;
+}
+	
+function detectState(ch, v)
+{
+	if (v < 2.0)
+		return "---";
+
+	return "ALARM";
 }
